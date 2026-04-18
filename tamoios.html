@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cameras Tamoios</title>
+
+  <style>
+    :root {
+      --gap: 10px;
+      --pad: 10px;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #111;
+      font-family: Arial, sans-serif;
+      overflow: hidden; /* sem scroll */
+    }
+
+    /* fallback + viewport dinâmico (evita corte no mobile e alguns desktops) */
+    body {
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--gap);
+      padding: var(--pad);
+      box-sizing: border-box;
+
+      width: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      /* MUITO importante p/ evitar cortes em grid/flex */
+      min-height: 0;
+    }
+
+    .player-wrapper {
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      height: fit-content;
+      border: 1px solid #333;
+      border-radius: 4px;
+      overflow: hidden;
+
+      /* MUITO importante p/ evitar overflow interno */
+      min-height: 0;
+    }
+
+    .player-container {
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .tarja {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+
+      padding: 8px 10px;
+      box-sizing: border-box;
+
+      /* evita a tarja crescer (quebrar linha) e cortar o grid */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      flex-shrink: 0;
+      font-size: 12px;
+      line-height: 1.2;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-wrapper img {
+      width: auto;
+      height: auto;
+      max-width: 320px;
+      max-height: 180px;
+      display: block;
+    }
+
+    @media (max-width: 1600px) {
+      .grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .tarja {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const cameras = [
+      {
+        name: 'KM 0,1 | SERRA NOVA | SAÍDA T1',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM01/KM%2001_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 0,5 | CONTORNO NORTE | UBATUBA',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/01/[date][time]00.jpg',
+        yearFormat: 'YYYY'
+      },
+      {
+        name: 'KM 12,6 | PLANALTO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM12/KM%2012_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 15,4 | SERRA NOVA | ENTRADA T5',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM15/KM%2015_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 20,4 | PLANALTO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM20/KM%2020_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 27,9 | CONTORNO SUL | SÃO SEBASTIÃO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/27/[date][time]00.jpg',
+        yearFormat: 'YYYY'
+      },
+      {
+        name: 'KM 34,4 | PLANALTO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM34/KM%2034_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 47,0 | PLANALTO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM47/KM%2047_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 58,4 | PLANALTO',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM58/KM%2058_[date][time]00.jpg',
+        yearFormat: 'YY'
+      },
+      {
+        name: 'KM 80,2 | SERRA ANTIGA',
+        baseName: 'https://plum-oyster-995976.hostingersite.com/KM80/KM%2080_[date][time]00.jpg',
+        yearFormat: 'YY'
+      }
+    ];
+
+    // Função para formatar data e hora
+    function getFormattedDateTime(yearFormat = 'YY') {
+      const now = new Date();
+      // Subtrair 2 minutos (120000 ms) para a data
+      now.setMinutes(now.getMinutes() - 2);
+
+      let year;
+      if (yearFormat === 'YYYY') {
+        year = now.getFullYear();
+      } else {
+        year = String(now.getFullYear()).slice(-2);
+      }
+
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const date = `${year}${month}${day}`;
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const time = `${hours}${minutes}${seconds}`;
+
+      return { date, time };
+    }
+
+    // Função para gerar URL com datetime
+    function generateImageUrl(camera) {
+      const { date, time } = getFormattedDateTime(camera.yearFormat);
+      return camera.baseName
+        .replace('[date]', date)
+        .replace('[time]', time);
+    }
+
+    // Função para atualizar todas as imagens
+    function updateAllImages() {
+      cameras.forEach((camera, index) => {
+        const img = document.querySelector(`img[data-camera-index="${index}"]`);
+        if (img) {
+          img.src = generateImageUrl(camera);
+        }
+      });
+    }
+
+    // Função para renderizar o grid
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      cameras.forEach((camera, index) => {
+        const playerWrapper = document.createElement('div');
+        playerWrapper.className = 'player-wrapper';
+
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'player-container';
+
+        const img = document.createElement('img');
+        img.setAttribute('data-camera-index', index);
+        img.alt = camera.name;
+        img.src = generateImageUrl(camera);
+
+        const tarja = document.createElement('div');
+        tarja.className = 'tarja';
+        tarja.textContent = camera.name;
+
+        playerContainer.appendChild(img);
+        playerWrapper.appendChild(playerContainer);
+        playerWrapper.appendChild(tarja);
+        grid.appendChild(playerWrapper);
+      });
+    }
+
+    // Inicializar
+    renderGrid();
+
+    // Atualizar imagens a cada 2 segundos
+    setInterval(updateAllImages, 2000);
+  </script>
+</body>
+</html>
