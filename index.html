@@ -11,6 +11,7 @@
     :root {
       --gap: 10px;
       --pad: 10px;
+      --header-height: 56px;
     }
 
     html, body {
@@ -26,6 +27,36 @@
     body {
       height: 100vh;
       height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      background: #000;
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+    }
+
+    .header a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px 14px;
+      border: 1px solid #333;
+      border-radius: 999px;
+      background: #151515;
+    }
+
+    .header a.active {
+      background: #fff;
+      color: #000;
     }
 
     .grid {
@@ -36,8 +67,7 @@
       padding: var(--pad);
       box-sizing: border-box;
 
-      height: 100vh;
-      height: 100dvh;
+      flex: 1;
 
       /* MUITO importante p/ evitar cortes em grid/flex */
       min-height: 0;
@@ -103,6 +133,10 @@
 </head>
 
 <body>
+  <header class="header">
+    <a href="index.html" class="active">DER</a>
+    <a href="tamoios.html">Tamoios</a>
+  </header>
   <div class="grid">
     <div class="player-wrapper">
       <div class="player-container">
